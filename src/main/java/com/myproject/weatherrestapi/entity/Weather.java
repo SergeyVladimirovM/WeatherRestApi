@@ -1,35 +1,42 @@
 package com.myproject.weatherrestapi.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 
+import javax.persistence.*;
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Entity
 public class Weather {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private UUID id;
+    @Column(name = "id")
+    private Long id;
 
+    @Column(name = "country")
     private String country;
 
+    @Column(name = "city")
     private String city;
 
+    @Column(name = "temperature")
     private Integer temperature;
 
-    private OffsetDateTime dateTime;
+    @Column(name = "created_at")
+    private OffsetDateTime createdAt;
 
     public Weather() {
     }
 
-    public void setId(UUID id) {
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = OffsetDateTime.now();
+    }
+
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public UUID getId() {
+    public Long getId() {
         return id;
     }
 
@@ -57,8 +64,8 @@ public class Weather {
         this.temperature = temperature;
     }
 
-    public OffsetDateTime getDateTime() {
-        return dateTime;
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
     }
 
     @Override
@@ -68,7 +75,7 @@ public class Weather {
                 ", country='" + country + '\'' +
                 ", city='" + city + '\'' +
                 ", temperature=" + temperature +
-                ", dateTime=" + dateTime +
+                ", dateTime=" + createdAt +
                 '}';
     }
 }
