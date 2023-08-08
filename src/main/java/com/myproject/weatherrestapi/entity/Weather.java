@@ -19,7 +19,7 @@ public class Weather {
     private String city;
 
     @Column(name = "temperature")
-    private Integer temperature;
+    private Double temperature;
 
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
@@ -56,11 +56,11 @@ public class Weather {
         this.city = city;
     }
 
-    public Integer getTemperature() {
+    public Double getTemperature() {
         return temperature;
     }
 
-    public void setTemperature(Integer temperature) {
+    public void setTemperature(Double temperature) {
         this.temperature = temperature;
     }
 
