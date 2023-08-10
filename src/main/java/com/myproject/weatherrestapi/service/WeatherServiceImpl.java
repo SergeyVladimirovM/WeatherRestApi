@@ -12,6 +12,7 @@ import okhttp3.Response;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Service
@@ -39,12 +40,22 @@ public class WeatherServiceImpl implements WeatherService {
     }
 
     @Override
-    public Long saveWeatherByCityWeatherApiCom(String city) throws IOException {
+    public List<Weather> findAllWeatherByCityAndCountry(String city, String country) {
+        return weatherRepository.findAllByCityAndCountry(city, country);
+    }
+
+    @Override
+    public List<Weather> findAllWeatherByCityAndCountryAnd(String city, String country, OffsetDateTime createdAt) {
+        return null;
+    }
+
+    @Override
+    public Weather weatherByCityWeatherApiCom(String city) throws IOException {
         OkHttpClient client = new OkHttpClient();
         Gson gson = new Gson();
 
         Request request = new Request.Builder()
-                .url("http://api.weatherapi.com/v1/current.json?key=My-Key&q=London&aqi=no")
+                .url(String.format("http://api.weatherapi.com/v1/current.json?key=My-Key&q=%s&aqi=no", city))
                 .get()
                 .build();
 
@@ -54,17 +65,17 @@ public class WeatherServiceImpl implements WeatherService {
         Weather weather = new Weather();
         weather.setCity(weatherApiComPojo.getLocation().getName());
         weather.setCountry(weatherApiComPojo.getLocation().getCountry());
-        weather.setTemperature(weatherApiComPojo.getCurrent().getTempC());
-        return saveWeather(weather);
+        weather.setTemperature((int) weatherApiComPojo.getCurrent().getTempC());
+        return weather;
     }
 
     @Override
-    public Long saveWeatherByCityWeatherStackApi(String city) throws IOException {
+    public Weather weatherByCityWeatherStackApi(String city) throws IOException {
         OkHttpClient client = new OkHttpClient();
         Gson GSON = new Gson();
 
         Request request = new Request.Builder()
-                .url("http://api.weatherstack.com/current?access_key=My-Key&query=London")
+                .url(String.format("http://api.weatherstack.com/current?access_key=My-Key&query=%s", city))
                 .get()
                 .build();
 
@@ -73,17 +84,17 @@ public class WeatherServiceImpl implements WeatherService {
         Weather weather = new Weather();
         weather.setCountry(weatherStackApiPojo.getLocation().getCountry());
         weather.setCity(weatherStackApiPojo.getLocation().getName());
-        weather.setTemperature((double) weatherStackApiPojo.getCurrent().getTemperature());
-        return saveWeather(weather);
+        weather.setTemperature(weatherStackApiPojo.getCurrent().getTemperature());
+        return weather;
     }
 
     @Override
-    public Long saveWeatherByCityWeatherNinjasApi(String city) throws IOException {
+    public Weather weatherByCityWeatherNinjasApi(String city) throws IOException {
         OkHttpClient client = new OkHttpClient();
         Gson GSON = new Gson();
 
         Request request = new Request.Builder()
-                .url("https://api.api-ninjas.com/v1/weather?city=London")
+                .url(String.format("https://api.api-ninjas.com/v1/weather?city=%s", city))
                 .addHeader("X-Api-Key", "My-Key")
                 .get()
                 .build();
@@ -94,7 +105,19 @@ public class WeatherServiceImpl implements WeatherService {
         Weather weather = new Weather();
         weather.setCity("London");
         weather.setCountry("United Kingdom");
-        weather.setTemperature((double) (weatherNinjasApiPojo.getTemp()));
+        weather.setTemperature(weatherNinjasApiPojo.getTemp());
+        return weather;
+    }
+
+    @Override
+    public Long saveWeatherByCity(String city) throws IOException {
+        Weather weatherApiCom = weatherByCityWeatherApiCom(city);
+        Weather weatherStackApi = weatherByCityWeatherStackApi(city);
+        Weather weatherNinjasApi = weatherByCityWeatherNinjasApi(city);
+
+        Integer medTemp = (weatherApiCom.getTemperature() + weatherStackApi.getTemperature() + weatherNinjasApi.getTemperature()) / 3;
+        Weather weather = weatherApiCom;
+        weather.setTemperature(medTemp);
         return saveWeather(weather);
     }
 }
